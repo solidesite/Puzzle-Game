@@ -3,6 +3,13 @@ const startButton = document.querySelector(".start-button");
 const gameText = document.querySelector(".game-text");
 const playTime = document.querySelector(".play-time");
 const tiles = document.querySelectorAll(".image-container > li");
+const hintKey = document.querySelector(".hint")
+
+hintKey.addEventListener("click", function () {
+    [...container.children].forEach(child => {
+        child.innerText = child.getAttribute("data-type")
+    })
+})
 
 let isPlaying = false;
 //타이머 변수
@@ -19,32 +26,48 @@ startButton.addEventListener("click", () => {
     setGame()
 })
 function setGame() {
+    time = 0;
+    gameText.style.display = "none";
     timeInterval = setInterval(() => {
         time++
         playTime.innerText = time;
     }, 1000);
-    const gameTiles = shuffle(tiles);
-    console.log(gameTiles)
+    const gameTiles = shuffle([...tiles]);
+    container.innerHTML = "";
+    gameTiles.forEach(tile => {
+        container.appendChild(tile)
+    })
 }
 
 //랜덤
 function shuffle(array) {
     let index = array.length -1;
+    const randomIndex = Math.floor(Math.random()*(index+1))
     while(index > 0) {
-        const randomIndex = Math.floor(Math.random()*(index+1))
-        [array[index], array[randomIndex]] = [array[randomIndex], array[index]]
+        [array[index], array[randomIndex]] = [array[randomIndex], array[index]] //배열 랜덤 섞기
         index--;
     }
     return array;
 }
 
 function checkStatus() {
-    clearInterval(timeInterval)
+    const currentList = [...container.children];
+    const unMatched = currentList.filter((list,index) => {
+        return Number(list.getAttribute("data-type")) !== index
+    })
+    if (unMatched.length === 0) {
+        isPlaying = false;
+        clearInterval(timeInterval)
+        gameText.style.display = "block";
+    }
+    // currentList.forEach((list,index) => {
+    //     list.data ===index
+    // })
 }
 
 container.addEventListener("dragstart", (e) => {
     const obj = e.target;
-    console.log({obj})
+    // console.log({obj})
     dragged.el = obj;
     dragged.class = obj.className; //console.log의 타겟에서 className: "list0" 확인 가능
     dragged.index = [...obj.parentNode.children].indexOf(obj)
@@ -69,4 +92,5 @@ container.addEventListener("drop", (e) => {
     const droppedIndex = [...obj.parentNode.children].indexOf(obj)
     dragged.index > droppedIndex ? obj.before(dragged.el) : obj.after(dragged.el) //드롭한 대상
     isLast ? originPlace.after(obj) : originPlace.before(obj) //드롭당한 대상을 원래위치로
+    checkStatus();
 })
